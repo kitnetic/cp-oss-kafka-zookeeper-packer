@@ -1,0 +1,8 @@
+{
+  "confluent_version": "5.4",
+
+  "aws_region": "eu-west-1",
+  "aws_az": "eu-west-1a",
+
+  "gcp_zone": "us-central1-a"
+}

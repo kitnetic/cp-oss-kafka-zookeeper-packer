@@ -1,0 +1,72 @@
+{
+  "description": "Confluent OSS kafka-zoo Image",
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "ami_name": "confluent-{{user `confluent_version`}}-kafka-zoo-oss-{{isotime | clean_ami_name}}",
+      "availability_zone": "{{user `aws_az`}}",
+      "iam_instance_profile": "packer",
+      "instance_type": "t3.small",
+      "region": "{{user `aws_region`}}",
+      "vpc_id": "{{user `aws_vpc_id`}}",
+      "subnet_id": "{{user `aws_subnet_id`}}",
+      "associate_public_ip_address": true,
+      "run_tags": {
+        "role": "packer"
+      },
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "*ubuntu-bionic-18.04-amd64-server-20190814*",
+          "root-device-type": "ebs"
+        },
+        "owners": ["{{user `image_owner_id`}}"],
+        "most_recent": true
+      },
+      "ssh_timeout": "10m",
+      "ssh_username": "ubuntu",
+      "tags": {
+        "ImageType": "confluent-kafka-zoo-oss"
+      }
+    },
+    {
+      "type": "googlecompute",
+      "project_id": "{{user `gcp_project_id`}}",
+      "source_image_family": "ubuntu-1804-lts",
+      "zone": "{{user `gcp_zone`}}",
+      "image_family": "confluent-kafka-{{user `confluent_version` | clean_resource_name }}",
+      "image_name": "confluent-{{user `confluent_version` | clean_resource_name }}-kafka-zoo-oss-{{isotime \"20060102t030405\"}}",
+      "disk_size": "30",
+      "machine_type": "n1-standard-1",
+      "preemptible": true,
+      "ssh_username": "ubuntu"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "script": "update-machine.sh",
+      "execute_command": "echo '' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'"
+    },
+    {
+      "type": "shell",
+      "script": "install-monitoring-and-logging.sh"
+    },
+    {
+      "type": "file",
+      "source": "zookeeper.properties",
+      "destination": "zookeeper.properties"
+    },
+    {
+      "type": "shell",
+      "script": "install-openjdk11.sh",
+      "execute_command": "echo '' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'"
+    },
+    {
+      "type": "shell",
+      "script": "install-confluent-oss.sh",
+      "environment_vars": [ "CONFLUENT_VERSION={{user `confluent_version`}}" ],
+      "execute_command": "echo '' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'"
+    }
+  ]
+}
