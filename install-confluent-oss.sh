@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Get the key
+#Get the key
 wget -qO - https://packages.confluent.io/deb/${CONFLUENT_VERSION}/archive.key | sudo apt-key add -
 
 
